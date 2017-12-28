@@ -25,7 +25,10 @@ module InvoiceNumbers
             if read_attribute( invoice_number_field ).blank? 
               if invoice_number_assign_if.nil? or invoice_number_assign_if.call(self)
                 sequence = invoice_number_sequence.respond_to?(:call) ? invoice_number_sequence.call(self) : invoice_number_sequence
-                write_attribute( invoice_number_field, "#{invoice_number_prefix ? sequence : ''}#{Generator.next_invoice_number( sequence )}" )
+                prefix = invoice_number_prefix.respond_to?(:call) ? invoice_number_prefix.call(self) : invoice_number_prefix
+                prefix = sequence if prefix == true
+
+                write_attribute( invoice_number_field, "#{prefix}#{Generator.next_invoice_number( sequence )}" )
               end
             end
           end
