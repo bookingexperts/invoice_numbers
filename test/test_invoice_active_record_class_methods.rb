@@ -1,10 +1,10 @@
-require 'test/unit'
+require File.dirname( __FILE__ ) + '/database_configuration'
+
 require 'database_cleaner'
 require 'minitest/spec'
 require 'invoice_numbers'
-require File.dirname( __FILE__ ) + '/database_configuration'
 
-if ENV['orm'] == 'activerecord'
+if ENV['orm'].nil? || ENV['orm'] == 'activerecord'
 
   ActiveRecord::Schema.define :version => 1 do
     create_table :orders, :force => true do |t|
