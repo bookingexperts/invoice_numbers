@@ -1,4 +1,4 @@
-if ENV['orm'] == 'activerecord'
+if ENV['orm'].nil? || ENV['orm'] == 'activerecord'
 
   ActiveRecord::Schema.define :version => 1 do
     create_table :invoice_number_sequences, :force => true do |t|

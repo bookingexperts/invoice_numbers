@@ -1,4 +1,4 @@
-if ENV['orm'] == 'activerecord'
+if ENV['orm'].nil? || ENV['orm'] == 'activerecord'
 
   require 'active_record'
   require 'sqlite3'

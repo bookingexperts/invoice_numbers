@@ -1,78 +1,10 @@
-require 'test/unit'
+require File.dirname( __FILE__ ) + '/database_configuration'
+
 require 'database_cleaner'
 require 'minitest/spec'
 require 'invoice_numbers'
-require File.dirname( __FILE__ ) + '/database_configuration'
 
-if ENV['orm'] == 'activerecord'
-
-  ActiveRecord::Schema.define :version => 1 do
-    create_table :orders, :force => true do |t|
-      t.boolean :finished,    :default => false
-      t.string :dummy_nr
-      t.string :invoice_nr
-    end
-    create_table :reservations, :force => true do |t|
-      t.boolean :finished,    :default => false
-      t.string :invoice_nr
-    end
-    create_table :invoices, :force => true do |t|
-      t.boolean :finished,    :default => false
-      t.string :invoice_nr
-      t.string  :customer
-     end
-  end
-
-  class Order < ActiveRecord::Base
-    has_invoice_number :invoice_nr, :assign_if => lambda { |order| order.finished? }
-    has_invoice_number :dummy_nr,   :invoice_number_sequence => :dummy
-  end
-
-  class Reservation < ActiveRecord::Base
-    has_invoice_number :invoice_nr, :invoice_number_sequence => :shared
-  end
-
-  class Invoice < ActiveRecord::Base
-    has_invoice_number :invoice_nr, :invoice_number_sequence => lambda { |invoice| "#{invoice.customer}" }, :prefix => true
-  end
-
-elsif ENV['orm'] == 'mongoid'
-
-  class Order
-    include Mongoid::Document
-    include InvoiceNumbers::InvoiceNumbers
-
-    field :finished, 	type: Boolean, default: false
-    field :dummy_nr, 	type: String
-    field :invoice_nr, 	type: String
-
-    has_invoice_number :invoice_nr, :assign_if => lambda { |order| order.finished? }
-    has_invoice_number :dummy_nr,   :invoice_number_sequence => :dummy
-  end
-
-  class Reservation
-    include Mongoid::Document
-    include InvoiceNumbers::InvoiceNumbers
-
-    field :finished, 	type: Boolean, default: false
-    field :invoice_nr, 	type: String
-
-    has_invoice_number :invoice_nr, :invoice_number_sequence => :shared
-  end
-
-  class Invoice
-    include Mongoid::Document
-    include InvoiceNumbers::InvoiceNumbers
-
-    field :finished, 	type: Boolean, default: false
-    field :invoice_nr, 	type: String
-    field :dummy_nr, 	type: String
-    field :customer, 	type: String
-
-    has_invoice_number :invoice_nr, :invoice_number_sequence => lambda { |invoice| "#{invoice.customer}" }, :prefix => true
-  end
-
-end
+require File.dirname( __FILE__ ) + '/models'
 
 describe Invoice do
   before do
@@ -97,6 +29,7 @@ describe Invoice do
     @invoice.assign_invoice_number
     @invoice.invoice_nr.must_equal "jan1"
   end
+
 end
 
 describe Reservation do
@@ -111,17 +44,22 @@ describe Reservation do
     @reservation.invoice_nr.must_be_nil
   end
 
-  it 'assigns an invoice number when forced' do
+  it 'assigns and increments invoice numbers when forced' do
     @reservation.assign_invoice_number
     @reservation.save
-    @reservation.invoice_nr.must_equal 1.to_s
+    @reservation.invoice_nr.must_equal "R[#{@reservation.object_id}]1"
+
+    other_reservation = Reservation.new
+    other_reservation.assign_invoice_number
+    other_reservation.save
+    other_reservation.invoice_nr.must_equal "R[#{other_reservation.object_id}]2"
   end
 
   it 'uses the shared sequence' do
     InvoiceNumbers::Generator.next_invoice_number(:shared)
     InvoiceNumbers::Generator.next_invoice_number(:shared)
     @reservation.assign_invoice_number
-    @reservation.invoice_nr.must_equal 3.to_s
+    @reservation.invoice_nr.must_equal "R[#{@reservation.object_id}]3"
   end
 end
 
