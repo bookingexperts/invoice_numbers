@@ -51,7 +51,7 @@ elsif ENV['orm'] == 'mongoid'
     field :finished, 	type: Boolean, default: false
     field :invoice_nr, 	type: String
 
-    has_invoice_number :invoice_nr, :invoice_number_sequence => :shared
+    has_invoice_number :invoice_nr, :invoice_number_sequence => :shared, :prefix => lambda { |reservation| "R[#{reservation.object_id}]" }
   end
 
   class Invoice

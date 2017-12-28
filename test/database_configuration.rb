@@ -14,7 +14,7 @@ elsif ENV['orm'] == 'mongoid'
   require 'mongoid'
 
   Mongoid.configure do |config|
-    config.master = Mongo::Connection.new.db("invoice_number_generator")
+    config.connect_to("invoice_number_generator")
   end
 
 end

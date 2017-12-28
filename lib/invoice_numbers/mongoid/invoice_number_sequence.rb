@@ -1,5 +1,7 @@
 class InvoiceNumberSequence
   include Mongoid::Document
+
+  field :name, type: String
   field :next_number, type: Integer, default: 0
 
   def self.by_sequence_name( sequence_name )
@@ -7,6 +9,7 @@ class InvoiceNumberSequence
   end
 
   def increment!
-    inc(:next_number, 1)
+    inc(:next_number => 1)
+    next_number
   end
 end
